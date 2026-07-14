@@ -1,77 +1,77 @@
 # RepoPilot
 
-AI Coding Agent inspired by Claude Code architecture. Built with raw Anthropic SDK, featuring skill routing, self-evolving memory, hierarchical context compression, centralized multi-agent collaboration, and permission security review.
+参考 Claude Code 架构设计的 AI 编程助手。基于 Anthropic SDK 原生构建，涵盖 Skill 分层路由、自进化记忆沉淀、分层上下文压缩、中心化多 Agent 协作、权限与安全审查五大核心能力。
 
-## Architecture
+## 架构设计
 
-The system is organized in three layers, from top to bottom:
+系统自上而下分为三层：
 
-**Interface Layer** — CLI / REPL (Typer + Rich) handles user interaction.
+**交互层** — CLI / REPL（Typer + Rich）负责用户交互。
 
-**Security Layer** — Permission Checker enforces deny-first rules and security review before any tool execution.
+**安全层** — 权限检查器在工具执行前，强制执行 deny-first 规则和安全审查。
 
-**Execution Layer** — Agent Loop (Query Loop + Tool Dispatch) coordinates five core modules:
+**执行层** — Agent Loop（查询循环 + 工具调度）协调五大核心模块：
 
-- **Tools** — read, write, edit, glob, grep, bash
-- **Skills** — loader, router, skill tool (two-stage routing with progressive loading)
-- **Memory** — store, indexer, evolution engine (self-evolving knowledge base)
-- **Context Manager** — token counter, cache, compressor (three-layer compression pipeline)
-- **Sub-Agents** — spawn, parallel execution, restricted tool sets
+- **工具集** — read、write、edit、glob、grep、bash
+- **Skill 路由** — 加载器、路由器、Skill 工具（二阶段路由 + 渐进式加载）
+- **记忆系统** — 存储、索引、进化引擎（自进化知识库）
+- **上下文管理** — Token 计数、缓存、压缩器（三层压缩管线）
+- **子 Agent** — 生成、并行执行、受限工具集
 
-## Key Technical Highlights
+## 核心技术亮点
 
-### 1. Skill Routing System (Skill分层路由)
+### 1. Skill 分层路由
 
-Two-stage routing with progressive context loading:
-- **Stage 1 - Recall**: Keyword + tag matching for fast candidate filtering
-- **Stage 2 - Rerank**: LLM evaluates candidates using frontmatter only (no full body)
-- **Progressive Loading**: Only YAML frontmatter scanned at startup; full skill body loaded on invocation
-- Solves: retrieval noise, function overlap, token cost growth
+二阶段路由 + 渐进式上下文加载：
+- **第一阶段 — 粗召回**：基于关键词 + 标签匹配，快速筛选候选 Skill
+- **第二阶段 — 精排**：LLM 仅根据 frontmatter 元信息对候选进行评分排序（不加载全文）
+- **渐进式加载**：启动时只扫描 YAML frontmatter，调用时才加载 Skill 全文
+- 解决问题：检索噪声、功能重叠、Token 成本增长
 
-### 2. Self-Evolving Memory (自进化记忆沉淀)
+### 2. 自进化记忆沉淀
 
-Closed-loop memory system: execution → reflection → extraction → categorized storage → index update → on-demand reuse
-- **5 memory types**: user, feedback, project, reference, procedural
-- **File-based storage**: Markdown files with YAML frontmatter + MEMORY.md index
-- **TF-IDF retrieval**: Keyword matching with IDF weighting and recency bonus
-- **Auto-reflection**: LLM analyzes conversations to extract reusable knowledge
+闭环记忆系统：执行 → 反思 → 提炼 → 分类存储 → 索引更新 → 按需复用
+- **5 种记忆类型**：user（用户画像）、feedback（行为反馈）、project（项目状态）、reference（外部引用）、procedural（程序性经验）
+- **文件化存储**：Markdown 文件 + YAML frontmatter + MEMORY.md 索引
+- **TF-IDF 检索**：关键词匹配 + IDF 权重 + 时间衰减
+- **自动反思**：LLM 分析会话历史，提取可复用知识
 
-### 3. Hierarchical Context Compression (分层上下文压缩)
+### 3. 分层上下文压缩
 
-Three-layer compression pipeline, cheapest first:
-- **Layer 1 - Microcompact**: Truncate oversized tool outputs, keep only N recent complete results
-- **Layer 2 - Context Collapse (70%)**: Fold old tool_call/tool_result pairs into one-line summaries
-- **Layer 3 - Auto-compact (85%)**: LLM-generated structured summary, preserving system prompt and tool definitions
+三层压缩管线，成本从低到高依次触发：
+- **第一层 — 微压缩**：截断过大的工具输出，仅保留最近 N 个完整结果
+- **第二层 — 上下文折叠（70%）**：将旧的 tool_call/tool_result 对折叠为单行摘要
+- **第三层 — 自动压缩（85%）**：LLM 生成结构化摘要，保留 system prompt 和工具定义不变
 
-### 4. Centralized Multi-Agent Collaboration (中心化多Agent协作)
+### 4. 中心化多 Agent 协作
 
-Central orchestrator pattern with controlled sub-agent execution:
-- Sub-agents spawned as tool_calls (no control transfer)
-- Independent context windows with restricted tool sets
-- Parallel execution support via ThreadPoolExecutor
-- Path boundary restrictions for security
+中心编排模式，主 Agent 控制子 Agent 执行：
+- 子 Agent 以 tool_call 方式生成（不移交控制权）
+- 独立上下文窗口 + 受限工具集
+- 通过 ThreadPoolExecutor 支持并行执行
+- 路径边界限制，确保安全隔离
 
-### 5. Permission & Security Review (权限与安全审查)
+### 5. 权限与安全审查
 
-Multi-layer security chain:
-- **Rule Engine**: Deny-first semantics (deny always wins over allow)
-- **Tool Classification**: read_only / write / dangerous
-- **Bash Security**: Pattern matching for dangerous commands (rm -rf, sudo, curl|bash, etc.)
-- **Prompt Injection Detection**: Regex patterns for instruction override, role hijacking, system tag injection
-- **Path Traversal Detection**: Block access to sensitive system paths
-- **Sandbox**: Working directory restrictions, sensitive env var filtering
+多层安全链：
+- **规则引擎**：deny-first 语义（deny 始终优先于 allow）
+- **工具分级**：read_only / write / dangerous 三级分类
+- **Bash 安全**：危险命令模式匹配（rm -rf、sudo、curl|bash 等）
+- **Prompt 注入检测**：正则匹配指令覆盖、角色劫持、系统标签注入
+- **路径穿越检测**：阻止访问敏感系统路径
+- **沙箱**：工作目录限制 + 敏感环境变量过滤
 
-## Tech Stack
+## 技术栈
 
-- **LLM API** — `anthropic` SDK (tool use, streaming, prompt caching)
-- **Data Model** — `pydantic`
-- **CLI** — `typer`
-- **Terminal UI** — `rich` (Markdown, Panel, Spinner)
-- **REPL** — `prompt-toolkit` (history, auto-suggest)
-- **Memory** — Markdown files + YAML frontmatter
-- **Config** — JSON (hierarchical: global → project → local)
+- **LLM 接口** — `anthropic` SDK（tool use、streaming、prompt caching）
+- **数据模型** — `pydantic`
+- **命令行** — `typer`
+- **终端界面** — `rich`（Markdown 渲染、Panel、Spinner）
+- **交互式 REPL** — `prompt-toolkit`（历史记录、自动补全）
+- **记忆存储** — Markdown 文件 + YAML frontmatter
+- **配置管理** — JSON（分层加载：全局 → 项目 → 本地）
 
-## Quick Start (从零开始运行)
+## 快速开始
 
 ### 1. 环境要求
 
@@ -81,8 +81,8 @@ Multi-layer security chain:
 ### 2. 克隆并安装
 
 ```bash
-git clone https://github.com/your-username/repopilot.git
-cd repopilot
+git clone https://github.com/msmzy/agent.git
+cd agent
 
 # 安装项目（开发模式）
 pip install -e .
@@ -118,7 +118,7 @@ repopilot init
 
 这会创建 `.repopilot/` 目录，包含配置文件、记忆存储和 Skill 目录。
 
-### 5. 使用
+### 5. 使用方式
 
 有两种使用方式：
 
@@ -135,12 +135,12 @@ repopilot chat
 
 示例对话：
 ```
-❯ 分析当前项目的目录结构
-❯ 读取 main.py 并解释它的逻辑
-❯ 找到所有包含 TODO 的文件
-❯ /skills    # 查看可用的 Skill
-❯ /usage     # 查看 token 消耗
-❯ /exit      # 退出
+> 分析当前项目的目录结构
+> 读取 main.py 并解释它的逻辑
+> 找到所有包含 TODO 的文件
+> /skills    # 查看可用的 Skill
+> /usage     # 查看 Token 消耗
+> /exit      # 退出
 ```
 
 #### 方式二：单次任务执行
@@ -170,23 +170,23 @@ repopilot chat --permission-mode auto-edit
 pytest tests/ -v
 ```
 
-### REPL Commands
+### REPL 命令
 
-- `/help` — Show available commands
-- `/clear` — Clear conversation history
-- `/usage` — Show token usage statistics
-- `/mode` — Switch permission mode
-- `/memory` — Show loaded memories
-- `/skills` — List available skills
-- `/exit` — Exit RepoPilot
+- `/help` — 查看可用命令
+- `/clear` — 清空对话历史
+- `/usage` — 查看 Token 消耗统计
+- `/mode` — 切换权限模式
+- `/memory` — 查看已加载的记忆
+- `/skills` — 列出可用的 Skill
+- `/exit` — 退出 RepoPilot
 
-## Configuration
+## 配置说明
 
-Settings are loaded hierarchically (later layers override earlier ones):
+配置按层级加载（后者覆盖前者）：
 
-1. `~/.repopilot/settings.json` (global)
-2. `.repopilot/settings.json` (project)
-3. `.repopilot/settings.local.json` (local, gitignored)
+1. `~/.repopilot/settings.json`（全局配置）
+2. `.repopilot/settings.json`（项目配置）
+3. `.repopilot/settings.local.json`（本地配置，已 gitignore）
 
 ```json
 {
@@ -203,50 +203,50 @@ Settings are loaded hierarchically (later layers override earlier ones):
 }
 ```
 
-## Creating Custom Skills
+## 自定义 Skill
 
-Place a `SKILL.md` file in `.repopilot/skills/<skill-name>/`:
+在 `.repopilot/skills/<skill-name>/` 目录下创建 `SKILL.md` 文件：
 
 ```markdown
 ---
 name: my-skill
-description: What this skill does
+description: 这个 Skill 的功能描述
 triggers:
   - /my-skill
-  - keywords that activate it
+  - 触发关键词
 tags:
-  - category
-applicable_when: When to use this skill
-not_applicable_when: When to skip
+  - 分类标签
+applicable_when: 适用场景
+not_applicable_when: 不适用场景
 ---
 
-# Instructions for the agent when this skill is invoked
+# 当此 Skill 被调用时，Agent 执行的指令
 ...
 ```
 
-## Testing
+## 测试
 
 ```bash
 pip install -e ".[dev]"
 pytest tests/
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 repopilot/
-├── agent/          # Core agent loop and sub-agent management
-├── tools/          # Tool implementations (read, write, edit, glob, grep, bash)
-├── skills/         # Skill discovery, routing, and execution
-├── memory/         # Self-evolving memory system
-├── context/        # Context compression and cache management
-├── permissions/    # Permission checking and security review
-├── config/         # Hierarchical configuration
-├── cli.py          # CLI entry point
-├── repl.py         # Interactive REPL
-└── bootstrap.py    # Component wiring
+├── agent/          # 核心 Agent 循环与子 Agent 管理
+├── tools/          # 工具实现（read、write、edit、glob、grep、bash）
+├── skills/         # Skill 发现、路由与执行
+├── memory/         # 自进化记忆系统
+├── context/        # 上下文压缩与缓存管理
+├── permissions/    # 权限检查与安全审查
+├── config/         # 分层配置加载
+├── cli.py          # CLI 入口
+├── repl.py         # 交互式 REPL
+└── bootstrap.py    # 组件装配
 ```
 
-## License
+## 许可证
 
 MIT
