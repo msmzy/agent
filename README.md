@@ -4,26 +4,19 @@ AI Coding Agent inspired by Claude Code architecture. Built with raw Anthropic S
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     CLI / REPL (Typer + Rich)                │
-├──────────────────────────────────────────────────────────────┤
-│                    Permission Checker                        │
-│           (Deny-First Rules + Security Review)               │
-├──────────────────────────────────────────────────────────────┤
-│                      Agent Loop                              │
-│              (Query Loop + Tool Dispatch)                     │
-├──────────┬──────────┬──────────┬──────────┬─────────────────┤
-│  Tools   │  Skills  │  Memory  │ Context  │   Sub-Agents    │
-│          │          │          │ Manager  │                 │
-│ read     │ loader   │ store    │ token    │ spawn           │
-│ write    │ router   │ indexer  │ cache    │ parallel        │
-│ edit     │ skill    │ evolve   │ compress │ restrict        │
-│ glob     │ tool     │          │          │                 │
-│ grep     │          │          │          │                 │
-│ bash     │          │          │          │                 │
-└──────────┴──────────┴──────────┴──────────┴─────────────────┘
-```
+The system is organized in three layers, from top to bottom:
+
+**Interface Layer** — CLI / REPL (Typer + Rich) handles user interaction.
+
+**Security Layer** — Permission Checker enforces deny-first rules and security review before any tool execution.
+
+**Execution Layer** — Agent Loop (Query Loop + Tool Dispatch) coordinates five core modules:
+
+- **Tools** — read, write, edit, glob, grep, bash
+- **Skills** — loader, router, skill tool (two-stage routing with progressive loading)
+- **Memory** — store, indexer, evolution engine (self-evolving knowledge base)
+- **Context Manager** — token counter, cache, compressor (three-layer compression pipeline)
+- **Sub-Agents** — spawn, parallel execution, restricted tool sets
 
 ## Key Technical Highlights
 
@@ -70,15 +63,13 @@ Multi-layer security chain:
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| LLM API | `anthropic` SDK (tool use, streaming, prompt caching) |
-| Data Model | `pydantic` |
-| CLI | `typer` |
-| Terminal UI | `rich` (Markdown, Panel, Spinner) |
-| REPL | `prompt-toolkit` (history, auto-suggest) |
-| Memory | Markdown files + YAML frontmatter |
-| Config | JSON (hierarchical: global → project → local) |
+- **LLM API** — `anthropic` SDK (tool use, streaming, prompt caching)
+- **Data Model** — `pydantic`
+- **CLI** — `typer`
+- **Terminal UI** — `rich` (Markdown, Panel, Spinner)
+- **REPL** — `prompt-toolkit` (history, auto-suggest)
+- **Memory** — Markdown files + YAML frontmatter
+- **Config** — JSON (hierarchical: global → project → local)
 
 ## Quick Start (从零开始运行)
 
@@ -181,15 +172,13 @@ pytest tests/ -v
 
 ### REPL Commands
 
-| Command | Description |
-|---------|-------------|
-| `/help` | Show available commands |
-| `/clear` | Clear conversation history |
-| `/usage` | Show token usage statistics |
-| `/mode` | Switch permission mode |
-| `/memory` | Show loaded memories |
-| `/skills` | List available skills |
-| `/exit` | Exit RepoPilot |
+- `/help` — Show available commands
+- `/clear` — Clear conversation history
+- `/usage` — Show token usage statistics
+- `/mode` — Switch permission mode
+- `/memory` — Show loaded memories
+- `/skills` — List available skills
+- `/exit` — Exit RepoPilot
 
 ## Configuration
 
