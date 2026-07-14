@@ -246,7 +246,3 @@ repopilot/
 ├── repl.py         # 交互式 REPL
 └── bootstrap.py    # 组件装配
 ```
-
-## 许可证
-
-MIT
